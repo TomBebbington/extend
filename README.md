@@ -1,8 +1,10 @@
 Extend is a Haxe-based framework for development of Web Browser plugins akin to UserScripts, just with a more generalised API.
 Developing a plugin
 -------------------
-Just call ext.Builder.build with your plugin information (defined in ext.Extension)!
+Just call ext.Builder.build with your plugin information.
+
 For example:
+
     ext.Builder.build({
     	name: "Useless plugin",
     	author: {
@@ -15,6 +17,7 @@ For example:
     		"*.haxe.org/*"
     	]
     })
+
 And use a -D flag to choose what you want to target. Currently supported are:
 + Firefox (you'll need the Add-on SDK to build it)
 + Chrome
