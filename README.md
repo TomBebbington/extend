@@ -6,7 +6,10 @@ Just call ext.Builder.build with your plugin information.
 For example:
 
     ext.Builder.build({
-    	name: "Useless plugin",
+    	name: {
+            short: "something-useless",
+            full: "Useless plugin"
+        },
     	author: {
     		name: "Tom Bebbington",
     		username: "TopHattedCoder"
