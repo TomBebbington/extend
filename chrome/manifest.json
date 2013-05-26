@@ -1,0 +1,1 @@
+{"name":"Sample","description":"A Sample Extension","version":"0.1","permissions":["http://*.reddit.com/*","storage"],"manifest_version":2,"content_scripts":[{"js":["Sample.js"],"matches":["http://*.reddit.com/*"]}]}

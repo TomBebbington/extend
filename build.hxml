@@ -1,0 +1,17 @@
+-cp sample
+-main Test
+-js sample/test.js
+-D chrome
+--macro ext.Builder.generate()
+--next
+-cp sample
+-main Test
+-js sample/test.js
+-D firefox
+--macro ext.Builder.generate()
+--next
+-cp sample
+-main Test
+-js sample/test.js
+-D userscript
+--macro ext.Builder.generate()

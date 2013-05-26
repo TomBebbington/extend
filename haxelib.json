@@ -1,0 +1,10 @@
+{
+	"name":			"extend",
+	"url":			"https://github.com/tophattedcoder/extend/",
+	"license":		"BSD",
+	"tags":			["js", "browser", "extension", "chrome", "userscript", "greasemonkey"],
+	"description":	"Extension framework for Userscript-style plugin support in Greasemonkey and Chrome",
+	"version":		"0.0.1",
+	"releasenote":	"Initial release",
+	"contributors":	["tophattedcoder"]
+}
