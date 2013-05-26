@@ -19,7 +19,7 @@ class Builder {
 			m.license = "None";
 		if(!"plugin".exists())
 			"plugin".createDirectory();
-		var aor = Sys.getCwd();
+		var aor = Sys.getCwd().fullPath();
 		Sys.setCwd("plugin");
 		"info".saveContent(haxe.Json.stringify(m));
 		var orig = Sys.getCwd();
@@ -30,7 +30,7 @@ class Builder {
 				t.createDirectory();
 			Sys.setCwd(t);
 			var at:Target = targets.get(t);
-			at.pre(m);
+			at.pre(m, aor);
 			Sys.setCwd(orig);
 		}
 		Sys.setCwd(aor);
@@ -51,26 +51,42 @@ class Builder {
 			url = url.substr(8);
 		if(url.indexOf("/") != -1)
 			url = url.substr(0, url.indexOf("/"));
+		if(url.indexOf(".") == url.lastIndexOf("."))
+			url = 'www.$url';
 		return url;
+	}
+	static function match(url:String) {
+		var secure = url.startsWith("https://");
+		url = domain(url);
+		url = (secure ? "https" : "http") + "://"+url;
+		return '$url/*';
 	}
 	public static var targets:Map<String, Target> = [
 		"chrome" => {
-			pre: function(e) {
+			pre: function(e, r) {
 				var values = {
 					name: e.name.full,
 					version: e.version,
 					manifest_version: 2,
 					description: e.description,
 					content_scripts: [{
-						matches: e.sites.map(fullURL),
+						matches: e.sites.map(match),
 						js: ['${e.name.short}.js']
 					}],
-					permissions: e.permissions.concat(e.sites).map(fullURL).concat([
-						"storage"
-					])
+					permissions: ["storage", "notifications"].concat(e.permissions.concat(e.sites).map(match))
 				};
-				if(e.icons != null)
+				if(e.icons != null) {
 					Reflect.setField(values, "icons", e.icons);
+					for(is in Reflect.fields(e.icons)) {
+						var ip:String = Reflect.field(e.icons, is);
+						var old = Sys.getCwd();
+						Sys.setCwd(r);
+						var b:Null<haxe.io.Bytes> = ip.exists() ? ip.getBytes() : null;
+						Sys.setCwd(old);
+						if(b != null)
+							ip.saveBytes(b);
+					}
+				}
 				"manifest.json".saveContent(haxe.Json.stringify(values));
 				var target = '${e.name.short}.js';
 				target.saveContent("");
@@ -80,9 +96,9 @@ class Builder {
 			}
 		},
 		"firefox" => {
-			pre: function(e) {
+			pre: function(e, r) {
 				var id = e.url != null ? '${e.name.short}@${e.url}' : '${e.name.short}@${e.author.username}';
-				"package.json".saveContent(haxe.Json.stringify({
+				var data:Dynamic = {
 					name: e.name.short,
 					fullName: e.name.full,
 					id: id,
@@ -90,7 +106,23 @@ class Builder {
 					author: e.author.name,
 					license: e.license,
 					version: e.version
-				}));
+				};
+				if(e.icons != null)
+					for(i in Reflect.fields(e.icons)) {
+						var ip = Reflect.field(e.icons, i);
+						if(data.icon == null)
+							data.icon = ip;
+						else
+							Reflect.setField(data, 'icon$i', ip);
+						var old = Sys.getCwd();
+						Sys.setCwd(r);
+						trace('ip: $ip, i: $i');
+						var b:Null<haxe.io.Bytes> = ip.exists() ? ip.getBytes() : null;
+						Sys.setCwd(old);
+						if(b != null)
+							ip.saveBytes(b);
+					}
+				"package.json".saveContent(haxe.Json.stringify(data));
 				"data".createDirectory();
 				"doc".createDirectory();
 				"lib".createDirectory();
@@ -108,7 +140,7 @@ class Builder {
 			}
 		},
 		"userscript" => {
-			pre: function(e) {
+			pre: function(e, r) {
 				var includes = [for(s in e.sites) '// @include\t\t\t$s'].join("\n"), ns = e.url != null ? '@namespace\t\t${e.url}':"";
 	'${e.name.short}.user.info.js'.saveContent('// ==UserScript==
 // @name			${e.name.short}

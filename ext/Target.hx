@@ -1,5 +1,5 @@
 package ext;
 typedef Target = {
-	pre: Extension -> Void,
+	pre: Extension -> String -> Void,
 	post: Extension -> Void
 }

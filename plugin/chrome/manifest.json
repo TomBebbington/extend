@@ -1,1 +1,1 @@
-{"name":"Useless plugin","description":"A very very useless plugin. Upping your productivity since tomorrow!","version":"0.1","permissions":["http://*.haxe.org/*","storage"],"manifest_version":2,"content_scripts":[{"js":["useless.js"],"matches":["http://*.haxe.org/*"]}]}
+{"name":"Useless plugin","description":"A very very useless plugin. Upping your productivity since tomorrow!","version":"0.1","permissions":["storage","notifications","http://*.haxe.org/*"],"manifest_version":2,"content_scripts":[{"js":["useless.js"],"matches":["http://*.haxe.org/*"]}]}

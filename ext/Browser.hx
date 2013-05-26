@@ -28,4 +28,22 @@ class Browser {
 			default: untyped window.onload = function(_) cb();
 		}
 	}
+	#if chrome
+	static var nid = 0;
+	#end
+	public static function notify(n:ext.Notification) {
+		#if chrome
+		var opt = {
+			type: "basic",
+			title: n.title,
+			message: n.message,
+			iconUrl: n.icon
+		};
+		untyped chrome.notifications.create(Std.string(nid++), opt, function(id:String){});
+		#else
+		if(window.notifications != null) {
+			window.notifications.createNotification(null, n.title, n.message);
+		}
+		#end
+	}
 }
