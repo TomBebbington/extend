@@ -10,6 +10,8 @@ typedef Extension = {
 	var sites: Null<Array<String>>;
 	var permissions: Null<Array<String>>;
 	var license:Null<String>;
+	var target:String;
+	var output:String;
 }
 typedef Name = {
 	var short:String;

@@ -4,7 +4,7 @@ import haxe.macro.Type;
 import haxe.macro.*;
 import ext.target.*;
 using StringTools;
-#if macro
+#if(macro||sys)
 using sys.FileSystem;
 using sys.io.File;
 #end
@@ -21,22 +21,27 @@ class Builder {
 			"plugin".createDirectory();
 		var aor = Sys.getCwd().fullPath();
 		Sys.setCwd("plugin");
-		"info".saveContent(haxe.Json.stringify(m));
+		if(Sys.getCwd().indexOf("plugin") == -1)
+			throw "Could not chdir into plugin directory";
 		var orig = Sys.getCwd();
 		for(t in targets.keys()) {
 			if(!Context.defined(t))
 				continue;
 			if(!t.exists())
 				t.createDirectory();
+			m.target = t;
 			Sys.setCwd(t);
 			var at:Target = targets.get(t);
-			at.pre(m, aor);
+			var o = at.pre(m, aor);
+			Compiler.setOutput(o);
+			m.output = o;
 			Sys.setCwd(orig);
 		}
+		"info".saveContent(haxe.Serializer.run(m));
 		Sys.setCwd(aor);
 		return Context.makeExpr(true, Context.currentPos());
 	}
-	#if macro
+	#if(macro||sys)
 	static function fullURL(url:String) {
 		if(url.indexOf(".") == url.lastIndexOf("."))
 			url = 'www.$url';
@@ -89,10 +94,11 @@ class Builder {
 				}
 				"manifest.json".saveContent(haxe.Json.stringify(values));
 				var target = '${e.name.short}.js';
-				target.saveContent("");
-				Compiler.setOutput(target.fullPath());
+				target.saveContent("[dummy script]");
+				return target.fullPath();
 			},
 			post: function(e) {
+				trace(e);
 			}
 		},
 		"firefox" => {
@@ -107,21 +113,23 @@ class Builder {
 					license: e.license,
 					version: e.version
 				};
-				if(e.icons != null)
-					for(i in Reflect.fields(e.icons)) {
-						var ip = Reflect.field(e.icons, i);
+				if(e.icons != null) {
+					var fs = Reflect.fields(e.icons).map(Std.parseInt);
+					fs.sort(function(a, b) return b - a);
+					for(i in fs) {
+						var ip:String = Reflect.field(e.icons, Std.string(i));
 						if(data.icon == null)
 							data.icon = ip;
 						else
 							Reflect.setField(data, 'icon$i', ip);
 						var old = Sys.getCwd();
 						Sys.setCwd(r);
-						trace('ip: $ip, i: $i');
 						var b:Null<haxe.io.Bytes> = ip.exists() ? ip.getBytes() : null;
 						Sys.setCwd(old);
 						if(b != null)
 							ip.saveBytes(b);
 					}
+				}
 				"package.json".saveContent(haxe.Json.stringify(data));
 				"data".createDirectory();
 				"doc".createDirectory();
@@ -133,7 +141,7 @@ class Builder {
 				var out = 'data/${e.name.short}.js';
 				out.saveContent("");
 				out = out.fullPath();
-				Compiler.setOutput(out);
+				return out;
 			},
 			post: function(e) {
 
@@ -141,8 +149,13 @@ class Builder {
 		},
 		"userscript" => {
 			pre: function(e, r) {
+				'${e.name.short}.user.js'.saveContent("");
+				return '${e.name.short}.user.js'.fullPath();
+			},
+			post: function(e) {
 				var includes = [for(s in e.sites) '// @include\t\t\t$s'].join("\n"), ns = e.url != null ? '@namespace\t\t${e.url}':"";
-	'${e.name.short}.user.info.js'.saveContent('// ==UserScript==
+				var old = '${e.name.short}.user.js'.getContent();
+	'${e.name.short}.user.js'.saveContent('// ==UserScript==
 // @name			${e.name.short}
 $ns
 // @description		${e.description}
@@ -151,12 +164,8 @@ $includes
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getValue
 // @grant			GM_setValue
-// ==/UserScript==');
-				'${e.name.short}.user.js'.saveContent("");
-				Compiler.setOutput('${e.name.short}.user.js'.fullPath());
-			},
-			post: function(e) {
-
+// ==/UserScript==
+$old');
 			}
 		}
 	];
@@ -184,25 +193,23 @@ $includes
 			default: trace(e.expr); return null;
 		}
 	}
-	public static function generate() {
-		Compiler.define("dce", "full");
-		/*var m:Extension = cast haxe.Unserializer.run("temp".getContent());
-		//"temp".deleteFile();
-		var aor = Sys.getCwd();
+	public static function main() {
+		if(!"plugin".exists())
+			throw "Plugin folder does not exist. Cannot complete extension compilation";
+		Sys.setCwd(Sys.args()[0]);
+		var old = Sys.getCwd();
 		Sys.setCwd("plugin");
-		var orig = Sys.getCwd();
-		for(t in targets.keys()) {
-			if(!Context.defined(t))
-				continue;
+		var m:Extension = cast haxe.Unserializer.run("info".getContent());
+		Closure.compile(m.output.getContent(), function(o) {
+			m.output.saveContent(o);
+			var t:String = m.target;
 			if(!t.exists())
 				t.createDirectory();
 			Sys.setCwd(t);
 			var at:Target = targets.get(t);
-			trace('Building for $t');
 			at.post(m);
-			Sys.setCwd(orig);
-		}
-		Sys.setCwd(aor);*/
+			Sys.setCwd(old);
+		});
 	}
 	#end
 }

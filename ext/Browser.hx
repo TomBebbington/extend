@@ -33,16 +33,27 @@ class Browser {
 	#end
 	public static function notify(n:ext.Notification) {
 		#if chrome
-		var opt = {
-			type: "basic",
-			title: n.title,
-			message: n.message,
-			iconUrl: n.icon
-		};
-		untyped chrome.notifications.create(Std.string(nid++), opt, function(id:String){});
-		#else
-		if(window.notifications != null) {
-			window.notifications.createNotification(null, n.title, n.message);
+			var opt = {
+				type: "basic",
+				title: n.title,
+				message: n.message,
+				iconUrl: n.icon
+			};
+			try {
+				untyped chrome.notifications.create(Std.string(nid++), opt, function(id:String){});
+			}
+			catch(e:Dynamic) {
+		#end
+			if(window.notifications != null) {
+				if(window.notifications.checkPermission() != 0)
+					window.notifications.requestPermission(function() {
+						window.notifications.createNotification(null, n.title, n.message);
+						return true;
+					});
+				else
+					window.notifications.createNotification(null, n.title, n.message);
+			}
+		#if chrome
 		}
 		#end
 	}
