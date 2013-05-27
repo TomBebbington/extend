@@ -52,7 +52,8 @@ class Browser {
 					});
 				else
 					window.notifications.createNotification(null, n.title, n.message);
-			}
+			} else
+				trace("No notifications object found");
 		#if chrome
 		}
 		#end

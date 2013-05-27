@@ -7,9 +7,13 @@ class Closure {
 		h.setParameter("output_info", "compiled_code");
 		h.setParameter("js_code", code);
 		h.onData = function(d:String) {
-			trace(d);
 			cb(d);
 		}
+		h.onError = function(msg:String) {
+			trace('Error compiling: $msg');
+			cb(code);
+		}
+		trace("Compiling...");
 		h.request(true);
 	}
 }

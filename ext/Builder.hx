@@ -32,11 +32,15 @@ class Builder {
 			m.target = t;
 			Sys.setCwd(t);
 			var at:Target = targets.get(t);
-			var o = at.pre(m, aor);
+			var o:String = at.pre(m, aor);
+			o.saveContent("");
+			o = o.fullPath();
 			Compiler.setOutput(o);
 			m.output = o;
 			Sys.setCwd(orig);
 		}
+		if(m.skip_compile == null)
+			m.skip_compile = Context.defined("skip-closure");
 		"info".saveContent(haxe.Serializer.run(m));
 		Sys.setCwd(aor);
 		return Context.makeExpr(true, Context.currentPos());
@@ -93,12 +97,9 @@ class Builder {
 					}
 				}
 				"manifest.json".saveContent(haxe.Json.stringify(values));
-				var target = '${e.name.short}.js';
-				target.saveContent("[dummy script]");
-				return target.fullPath();
+				return '${e.name.short}.js';
 			},
 			post: function(e) {
-				trace(e);
 			}
 		},
 		"firefox" => {
@@ -138,10 +139,7 @@ class Builder {
 				main += 'pageMod.PageMod({\n\tinclude: ${haxe.Json.stringify(e.sites.map(domain))},\n\tcontentScriptWhen: \'ready\',\n\tcontentScriptFile: data.url("${e.name.short}.js")\n});';
 				"lib/main.js".saveContent(main);
 				"README.md".saveContent(e.description);
-				var out = 'data/${e.name.short}.js';
-				out.saveContent("");
-				out = out.fullPath();
-				return out;
+				return 'data/${e.name.short}.js';
 			},
 			post: function(e) {
 
@@ -149,23 +147,29 @@ class Builder {
 		},
 		"userscript" => {
 			pre: function(e, r) {
-				'${e.name.short}.user.js'.saveContent("");
-				return '${e.name.short}.user.js'.fullPath();
+				return '${e.name.short}.user.js';
 			},
 			post: function(e) {
-				var includes = [for(s in e.sites) '// @include\t\t\t$s'].join("\n"), ns = e.url != null ? '@namespace\t\t${e.url}':"";
-				var old = '${e.name.short}.user.js'.getContent();
-	'${e.name.short}.user.js'.saveContent('// ==UserScript==
-// @name			${e.name.short}
-$ns
-// @description		${e.description}
-$includes
-// @version			${e.version}
-// @grant			GM_xmlhttpRequest
-// @grant			GM_getValue
-// @grant			GM_setValue
-// ==/UserScript==
-$old');
+				var includes = [for(s in e.sites) '// @include\t$s'].join("\n"), ns = e.url != null ? '@namespace\t\t${e.url}':"";
+				var old = e.output.getContent();
+				e.output.saveContent('// ==UserScript==\n// @name\t${e.name.short}\n$ns\n// @description\t${e.description}\n$includes\n// @version\t${e.version}\n// @grant\tGM_xmlhttpRequest\n// @grant\tGM_getValue\n// @grant\tGM_setValue\n// ==/UserScript==\n$old');
+			}
+		},
+		"opera" => {
+			pre: function(e, r) {
+				if(!"includes".exists())
+					"includes".createDirectory();
+				var authorref = e.author.url == null ? "" :  ' href="${e.author.url}"';
+				"config.xml".saveContent('<?xml version="1.0" encoding="utf-8"?>\n<widget xmlns="http://www.w3.org/ns/widgets">\n\t<name>${e.name.full}</name>\n\t<description>${e.description}</description>\n\t<author${authorref}>${e.author.name} (${e.author.username})</author>\n</widget>');
+				"index.html".saveContent("");
+				return 'includes/${e.name.short}.js';
+			},
+			post: function(e) {
+				var includes = [for(s in e.sites) '// @include\t${match(s)}'].join("\n");
+				var old = e.output.getContent();
+				e.output.saveContent('// ==UserScript==\n$includes\n// ==/UserScript==\n$old');
+				var zip = '../${e.name.short}.oex'.fullPath();
+				Sys.command('zip -r $zip .');
 			}
 		}
 	];
@@ -185,6 +189,8 @@ $old');
 			case EConst(CString(s)): return s;
 			case EConst(CInt(s)): return Std.parseInt(s);
 			case EConst(CFloat(s)): return Std.parseFloat(s);
+			case EConst(CIdent("true")): return true;
+			case EConst(CIdent("false")): return false;
 			case EObjectDecl(fs):
 				var o = {};
 				for(f in fs)
@@ -194,13 +200,13 @@ $old');
 		}
 	}
 	public static function main() {
+		Sys.setCwd(Sys.args()[0]);
 		if(!"plugin".exists())
 			throw "Plugin folder does not exist. Cannot complete extension compilation";
-		Sys.setCwd(Sys.args()[0]);
 		var old = Sys.getCwd();
 		Sys.setCwd("plugin");
 		var m:Extension = cast haxe.Unserializer.run("info".getContent());
-		Closure.compile(m.output.getContent(), function(o) {
+		var func = function(o) {
 			m.output.saveContent(o);
 			var t:String = m.target;
 			if(!t.exists())
@@ -209,7 +215,11 @@ $old');
 			var at:Target = targets.get(t);
 			at.post(m);
 			Sys.setCwd(old);
-		});
+		};
+		if(m.skip_compile)
+			func(m.output.getContent());
+		else
+			Closure.compile(m.output.getContent(), func);
 	}
 	#end
 }

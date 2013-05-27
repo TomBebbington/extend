@@ -7,12 +7,12 @@ For example:
 
     ext.Builder.build({
     	name: {
-            short: "something-useless",
+            short: "useless",
             full: "Useless plugin"
         },
     	author: {
-    		name: "Tom Bebbington",
-    		username: "TopHattedCoder"
+    		name: "Stevey McStevenson",
+    		username: "steve"
     	},
     	description: "A very very useless plugin. Upping your productivity since tomorrow!",
     	version: "0.1",
@@ -23,5 +23,10 @@ For example:
 
 And use a -D flag to choose what you want to target. Currently supported are:
 + Firefox (you'll need the Add-on SDK to build it)
-+ Chrome
-+ Userscripts (GreaseMonkey/TamperMonkey)
++ Chrome (it will be unpacked; you still need to zip & publish it on the Chrome Web Store)
++ Greasemonkey
+
+Then add the following in your hxml file:
+
+    -cmd haxelib run extend
+

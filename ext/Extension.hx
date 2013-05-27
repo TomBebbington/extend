@@ -1,23 +1,25 @@
 package ext;
 
 typedef Extension = {
-	var name: Name;
-	var author: Author;
-	var description: Null<String>;
-	var url: Null<String>;
-	var version: String;
-	var icons:Map<Int, String>;
-	var sites: Null<Array<String>>;
-	var permissions: Null<Array<String>>;
-	var license:Null<String>;
-	var target:String;
-	var output:String;
+	name: Name,
+	author: Author,
+	description: Null<String>,
+	url: Null<String>,
+	version: String,
+	icons:Map<Int, String>,
+	sites: Null<Array<String>>,
+	permissions: Null<Array<String>>,
+	license:Null<String>,
+	target:String,
+	output:String,
+	skip_compile:Bool
 }
 typedef Name = {
-	var short:String;
-	var full:String;
+	short:String,
+	full:String
 }
 typedef Author = {
-	var name: String;
-	var username: String;
+	name: String,
+	username: String,
+	?url:String
 }

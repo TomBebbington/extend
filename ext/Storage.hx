@@ -1,5 +1,4 @@
 package ext;
-import js.*;
 class Storage {
 	static inline var ID = "data";
 	public static var data:Map<String, Dynamic>;
@@ -10,7 +9,7 @@ class Storage {
 		#elseif chrome
 			untyped chrome.storage.sync.get(ID, function(d) if(d != null && Std.is(d, String)) data = cast haxe.Unserializer.run(d));
 		#else
-			var i = (untyped localStorage).getItem(ID);
+			var i = Browser.window.localStorage.getItem(ID);
 			if(i != null)
 				data = cast haxe.Unserializer.run(i);
 		#end
@@ -21,7 +20,7 @@ class Storage {
 		#elseif chrome
 			untyped chrome.storage.sync.set(ID, haxe.Seralizer.run(data));
 		#else
-			(untyped localStorage).setItem(ID, haxe.Serializer.run(data));
+			Browser.window.localStorage.setItem(ID, haxe.Serializer.run(data));
 		#end
 	}
 }
