@@ -10,7 +10,7 @@ class Storage {
 		#elseif chrome
 			untyped chrome.storage.sync.get(ID, function(d) if(d != null && Std.is(d, String)) data = cast haxe.Unserializer.run(d));
 		#else
-			var i = Browser.getLocalStorage().getItem(ID);
+			var i = (untyped localStorage).getItem(ID);
 			if(i != null)
 				data = cast haxe.Unserializer.run(i);
 		#end
@@ -21,7 +21,7 @@ class Storage {
 		#elseif chrome
 			untyped chrome.storage.sync.set(ID, haxe.Seralizer.run(data));
 		#else
-			Browser.getLocalStorage().setItem(ID, haxe.Serializer.run(data));
+			(untyped localStorage).setItem(ID, haxe.Serializer.run(data));
 		#end
 	}
 }
