@@ -32,30 +32,41 @@ class Browser {
 	static var nid = 0;
 	#end
 	public static function notify(n:ext.Notification) {
-		#if chrome
-			var opt = {
-				type: "basic",
-				title: n.title,
-				message: n.message,
-				iconUrl: n.icon
-			};
-			try {
-				untyped chrome.notifications.create(Std.string(nid++), opt, function(id:String){});
-			}
-			catch(e:Dynamic) {
-		#end
-			if(window.notifications != null) {
-				if(window.notifications.checkPermission() != 0)
-					window.notifications.requestPermission(function() {
-						window.notifications.createNotification(null, n.title, n.message);
+		#if(firefox||chrome)
+			HTML5Notification.requestPermission(function(g:String) {
+				switch(g.toLowerCase()) {
+					case "granted":
+						var f = new HTML5Notification(n.title, {
+							body: n.message
+						});
+						f.onshow = function(_) if(n.timeout != null) untyped setTimeout(f.close, n.timeout * 1000);
+						f.onclose = function(_) if(n.onclick != null) n.onclick();
+					default: trace('Permission $g granted or not?'); throw g;
+				}
+			});
+		#else
+			var not:js.html.NotificationCenter = #if chrome untyped window.webkitNotifications #else window.notifications #end;
+			if(not != null) {
+				if(not.checkPermission() != 0)
+					not.requestPermission(function() {
+						not.createNotification(null, n.title, n.message);
 						return true;
 					});
 				else
-					window.notifications.createNotification(null, n.title, n.message);
+					not.createNotification(null, n.title, n.message);
 			} else
 				trace("No notifications object found");
-		#if chrome
-		}
 		#end
 	}
 }
+
+#if(firefox||chrome)
+@:native("Notification") extern class HTML5Notification {
+	public function new(title:String, info:{?dir:String, ?lang:String, ?body:String, ?tag:String}) {}
+	public var onclose:Dynamic->Void;
+	public var onshow:Dynamic->Void;
+	public var onerror:Dynamic->Void;
+	public function close():Void;
+	public static function requestPermission(ongrant:String->Void):Void {}
+}
+#end

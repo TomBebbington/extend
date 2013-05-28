@@ -6,10 +6,11 @@ typedef Extension = {
 	description: Null<String>,
 	url: Null<String>,
 	version: String,
-	icons:Map<Int, String>,
+	icons:Dynamic<String>,
 	sites: Null<Array<String>>,
 	permissions: Null<Array<String>>,
 	license:Null<String>,
+	resources:Array<String>,
 	target:String,
 	output:String,
 	skip_compile:Bool
