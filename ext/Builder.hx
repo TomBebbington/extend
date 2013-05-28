@@ -190,7 +190,17 @@ class Builder {
 				return 'data/${e.name.short}.js';
 			},
 			post: function(e) {
-
+				var sdk = Sys.getEnv("FOX_ADDON_SDK");
+				if(sdk == null || !sdk.exists())
+					trace('Firefox Add-on SDK environment var "FOX_ADDON_SDK" not found. Consider installing it then setting the environment var for faster add-on building');
+				else {
+					sdk = Path.addTrailingSlash(sdk);
+					var bs = sdk.indexOf("\\") == -1 ? "/" : "\\";
+					var ext = bs == "\\" ? ".bat" : "";
+					sdk += 'bin${bs}cfx$ext';
+					trace(sdk);
+					Sys.command('$sdk xpi');
+				}
 			},
 			copyTo: "data",
 			iconDir: "icons"
