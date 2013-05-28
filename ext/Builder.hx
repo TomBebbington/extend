@@ -214,7 +214,7 @@ class Builder {
 				var iconSizes = Reflect.fields(e.icons);
 				for(is in Reflect.fields(e.icons)) {
 					var ip = Reflect.field(e.icons, is);
-					iconxml += '<icon width="$is" height="$is">ip</icon>';
+					iconxml += '<icon width="$is" height="$is" src="$ip"/>';
 				}
 				"config.xml".saveContent('<?xml version="1.0" encoding="utf-8"?>\n<widget xmlns="http://www.w3.org/ns/widgets">\n\t<name>${e.name.full}</name>\n\t<description>${e.description}</description>\n\t<author${authorref}>${e.author.name} (${e.author.username})</author>\n\t$iconxml\n</widget>');
 				"index.html".saveContent("");
