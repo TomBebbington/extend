@@ -5,6 +5,7 @@ import sys.io.*;
 import haxe.macro.*;
 #end
 using haxe.crypto.BaseCode;
+using StringTools;
 class Resource {
 	static var b64:String = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	static var cssfile:EReg = ~/file\(('|")([^'"]*)\1\)/;
@@ -19,6 +20,8 @@ class Resource {
 	}
 	#if macro
 	static function getN(path:String, mime:String=""):String {
+		if(path.startsWith("/"))
+			path = path.substr(1);
 		if(!FileSystem.exists(path))
 			throw '$path does not exist';
 		var p = new haxe.io.Path(path);
@@ -44,23 +47,13 @@ class Resource {
 	}
 	#end
 	/** Returns a URL suitable for embedding in a webpage of the resource **/
-	#if chrome
-	public static function get(path:String, callb:String->Void):Void {
-		callb(untyped chrome.extension.getURL(path));
-	}
-	#elseif opera
-	public static function get(path:String, callb:String->Void):Void {
-		var file = untyped opera.extension.getFile('/$path');
-		if(file != null) {
-			var fr = new js.html.FileReader();
-			fr.onload = function(_) callb(fr.result);
-			fr.readAsDataURL(file);
+	public static macro function get(path:String, callb:Expr.ExprOf<String->Void>):Expr {
+		var pathe = Context.makeExpr(path, Context.currentPos());
+		return if(Context.defined("chrome"))
+			macro $callb(untyped chrome.extension.getURL($pathe));
+		else {
+			var v = Context.makeExpr(getN(path), Context.currentPos());
+			macro $callb($v);
 		}
 	}
-	#else
-	public static macro function get(path:String, callb:Expr.ExprOf<String->Void>):Expr {
-		var v = Context.makeExpr(getN(path), Context.currentPos());
-		return macro $callb($v);
-	}
-	#end
 }

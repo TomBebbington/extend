@@ -15,7 +15,7 @@ class Builder {
 		return switch(e.expr) {
 			case EField({expr: EConst(CIdent("this")), pos: _},name):
 				Context.makeExpr(Reflect.field(data, name), Context.currentPos());
-			default: throw 'Unknown expression $e';
+			case all: throw 'Unknown expression $all';
 		}
 	}
 	public macro static function build(e:ExprOf<Map<String, Dynamic>>):Expr {
@@ -87,13 +87,6 @@ class Builder {
 				delete(path+f);
 		} else if(path.exists())
 			path.deleteFile();
-	}
-	static function fullURL(url:String) {
-		if(url.indexOf(".") == url.lastIndexOf("."))
-			url = 'www.$url';
-		if(!url.startsWith("http://") && !url.startsWith("https://"))
-			url = 'http://$url';
-		return url;
 	}
 	static function domain(url:String) {
 		if(url.startsWith("http://"))
@@ -265,7 +258,7 @@ class Builder {
 				for(f in fs)
 					Reflect.setField(o, f.field, resolve(f.expr));
 				return o;
-			default: trace(e.expr); return null;
+			case all: throw 'Unrecognised expression: $all';
 		}
 	}
 	public static function main() {

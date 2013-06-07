@@ -14,15 +14,15 @@ class Http {
 		params = new haxe.ds.StringMap();
 		async = true;
 	}
-	public function setHeader(header:String, value:String):Http {
+	public inline function setHeader(header:String, value:String):Http {
 		headers.set(header, value);
 		return this;
 	}
-	public function setParameter(param:String, value:String):Http {
+	public inline function setParameter(param:String, value:String):Http {
 		params.set(param, value);
 		return this;
 	}
-	public function setPostData(data:String):Http {
+	public inline function setPostData(data:String):Http {
 		postData = data;
 		return this;
 	}
@@ -101,15 +101,15 @@ class Http {
 		params = new haxe.ds.StringMap();
 		async = true;
 	}
-	public function setHeader(header:String, value:String):Http {
+	public inline function setHeader(header:String, value:String):Http {
 		headers.set(header, value);
 		return this;
 	}
-	public function setParameter(param:String, value:String):Http {
+	public inline function setParameter(param:String, value:String):Http {
 		params.set(param, value);
 		return this;
 	}
-	public function setPostData(data:String):Http {
+	public inline function setPostData(data:String):Http {
 		postData = data;
 		return this;
 	}
