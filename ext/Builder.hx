@@ -18,7 +18,7 @@ class Builder {
 			case all: throw 'Unknown expression $all';
 		}
 	}
-	public macro static function build(e:ExprOf<Map<String, Dynamic>>):Expr {
+	public static macro function build(e:Expr):Expr {
 		var m:Extension = resolve(e);
 		if(m.sites == null)
 			m.sites = [];
@@ -235,19 +235,20 @@ class Builder {
 			iconDir: "icons"
 		}
 	];
-	static function resolve(e:Expr):Dynamic {
+	static function resolve(e:Expr, first:Bool=true):Dynamic {
 		switch(e.expr) {
 			case EArrayDecl(vs) if(vs.length == 0 || switch(vs[0].expr) {case EBinop(Binop.OpArrow, _, _): false; default: true;}):
-				return [for(v in vs) resolve(v)];
+				return [for(v in vs) resolve(v, false)];
 			case EArrayDecl(vs):
 				var o = {};
 				for(v in vs)
 					switch(v.expr) {
 						case EBinop(OpArrow, a, b):
-							Reflect.setField(o, Std.string(resolve(a)), resolve(b));
+							Reflect.setField(o, Std.string(resolve(a, false)), resolve(b, false));
 						default: 
 					}
 				return o;
+			case EConst(CString(s)) if(first): return haxe.Json.parse(sys.io.File.getContent(s));
 			case EConst(CString(s)): return s;
 			case EConst(CInt(s)): return Std.parseInt(s);
 			case EConst(CFloat(s)): return Std.parseFloat(s);
@@ -256,7 +257,7 @@ class Builder {
 			case EObjectDecl(fs):
 				var o = {};
 				for(f in fs)
-					Reflect.setField(o, f.field, resolve(f.expr));
+					Reflect.setField(o, f.field, resolve(f.expr, false));
 				return o;
 			case all: throw 'Unrecognised expression: $all';
 		}
